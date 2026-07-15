@@ -38,6 +38,21 @@ def get_failed_qa_posts_for_today():
     return response.data
 
 
+def get_human_review_posts_for_today():
+    today = date.today().isoformat()
+
+    response = (
+        supabase
+        .table("posts")
+        .select("*")
+        .eq("status", "human_review_required")
+        .gte("created_at", f"{today}T00:00:00")
+        .execute()
+    )
+
+    return response.data
+
+
 # Gets all posts created today, no matter their current status.
 def get_all_posts_created_today():
     today = date.today().isoformat()
@@ -172,6 +187,7 @@ def build_daily_report(published_posts, publishing_failures):
     posts_created_today = get_all_posts_created_today()
     published_posts_today = get_published_posts_for_today()
     failed_qa_posts = get_failed_qa_posts_for_today()
+    human_review_posts = get_human_review_posts_for_today()
 
     report = {
         "report_date": date.today().isoformat(),
@@ -181,10 +197,12 @@ def build_daily_report(published_posts, publishing_failures):
         "posts_published_this_run": len(published_posts),
         "posts_published_today": len(published_posts_today),
         "posts_needing_revision": len(failed_qa_posts),
+        "posts_needing_human_review": len(human_review_posts),
         "publishing_failures": len(publishing_failures),
         "published_posts": published_posts,
         "published_posts_today": published_posts_today,
         "failed_qa_posts": failed_qa_posts,
+        "human_review_posts": human_review_posts,
         "skipped_clients": skipped_clients,
         "failures": publishing_failures
     }
@@ -203,6 +221,7 @@ def print_daily_report(report):
     print(f"Posts published this run: {report['posts_published_this_run']}")
     print(f"Total posts published today: {report['posts_published_today']}")
     print(f"Posts needing revision: {report['posts_needing_revision']}")
+    print(f"Posts needing human review: {report['posts_needing_human_review']}")
     print(f"Publishing failures: {report['publishing_failures']}")
 
     print("\nPublished posts")
@@ -221,10 +240,23 @@ def print_daily_report(report):
     if report["failed_qa_posts"]:
         for post in report["failed_qa_posts"]:
             print(f"{post['client_name']} needs revision.")
+            print(f"Revision attempts: {post.get('revision_count', 0)}")
             print(f"QA notes: {post.get('qa_notes', 'No QA notes provided.')}")
             print("-" * 60)
     else:
         print("No posts failed QA today.")
+
+    print("\nPosts needing human review")
+    print("-" * 60)
+    if report["human_review_posts"]:
+        for post in report["human_review_posts"]:
+            print(f"{post['client_name']} needs human review.")
+            print(f"Revision attempts: {post.get('revision_count', 0)}")
+            print(f"QA notes: {post.get('qa_notes', 'No QA notes provided.')}")
+            print(f"Caption: {post.get('caption', 'No caption saved.')}")
+            print("-" * 60)
+    else:
+        print("No posts require human review today.")
 
     print("\nSkipped clients")
     print("-" * 60)

@@ -1,5 +1,10 @@
 from agents.scheduler_agent import run_scheduler
-from agents.content_agent import run_content_agent
+from agents.content_agent import (
+    MAX_REVISION_ATTEMPTS,
+    mark_posts_for_human_review,
+    run_content_agent,
+    run_revision_agent
+)
 from agents.qa_agent import run_qa_agent
 from agents.publish_report_agent import run_publish_report_agent
 
@@ -8,8 +13,9 @@ from agents.publish_report_agent import run_publish_report_agent
 # Runs each agent in order:
 # 1. Scheduler Agent decides which clients need posts today.
 # 2. Content Agent writes and saves captions for those clients.
-# 3. QA Agent reviews the saved captions and updates their status.
-# 4. Publish Report Agent simulates publishing and prints the daily report.
+# 3. QA Agent reviews captions and requests changes when needed.
+# 4. Revision Agent rewrites failed captions up to two times.
+# 5. Publish Report Agent simulates publishing and prints the daily report.
 def run_daily_workflow():
     print("\nStarting daily social media automation workflow...")
     print("=" * 60)
@@ -20,10 +26,22 @@ def run_daily_workflow():
     print("\nSTEP 2: Content Generator Agent")
     run_content_agent()
 
-    print("\nSTEP 3: QA Agent")
-    run_qa_agent()
+    for qa_round in range(MAX_REVISION_ATTEMPTS + 1):
+        print(f"\nSTEP 3.{qa_round + 1}: QA Agent")
+        run_qa_agent()
 
-    print("\nSTEP 4: Publish Report Agent")
+        if qa_round == MAX_REVISION_ATTEMPTS:
+            break
+
+        print(f"\nSTEP 4.{qa_round + 1}: Revision Agent")
+        revised_count = run_revision_agent()
+
+        if revised_count == 0:
+            break
+
+    mark_posts_for_human_review()
+
+    print("\nSTEP 5: Publish Report Agent")
     run_publish_report_agent()
 
     print("\nDaily workflow completed successfully.")

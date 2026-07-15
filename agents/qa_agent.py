@@ -69,6 +69,8 @@ APPROVED: short reason
 or
 
 NEEDS_REVISION: short reason
+
+Make the reason specific and actionable because another agent will use it to revise the caption.
 """
 
 
@@ -95,7 +97,7 @@ def review_caption(post, client_profile):
 
 
 # Updates the post in Supabase with its final QA status and notes.
-def update_post_status(post_id, qa_result):
+def update_post_status(post, qa_result):
     if qa_result.startswith("APPROVED"):
         status = "approved"
     else:
@@ -108,7 +110,7 @@ def update_post_status(post_id, qa_result):
             "status": status,
             "qa_notes": qa_result
         })
-        .eq("id", post_id)
+        .eq("id", post["id"])
         .execute()
     )
 
@@ -128,7 +130,7 @@ def run_qa_agent():
         print(f"Reviewing caption for {client_profile['client_name']}...")
 
         qa_result = review_caption(post, client_profile)
-        update_post_status(post["id"], qa_result)
+        update_post_status(post, qa_result)
 
         print(qa_result)
         print("-" * 50)
