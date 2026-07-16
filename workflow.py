@@ -1,8 +1,8 @@
 from agents.scheduler_agent import run_scheduler
-from agents.content_agent import (
+from agents.content_agent import run_content_agent
+from agents.revision_agent import (
     MAX_REVISION_ATTEMPTS,
     mark_posts_for_human_review,
-    run_content_agent,
     run_revision_agent
 )
 from agents.qa_agent import run_qa_agent

@@ -138,27 +138,6 @@ st.markdown(
             margin: 0 0 0.75rem 0;
         }
 
-        .status-strip {
-            display: flex;
-            gap: 0.5rem;
-            flex-wrap: wrap;
-            margin: 0.75rem 0 1.2rem 0;
-        }
-
-        .status-pill {
-            border-radius: 999px;
-            border: 1px solid var(--line);
-            background: rgba(255, 250, 243, 0.9);
-            color: var(--coffee);
-            padding: 0.42rem 0.7rem;
-            font-size: 0.84rem;
-            font-weight: 750;
-        }
-
-        .status-pill.success { border-color: rgba(88, 115, 77, 0.35); color: var(--success); }
-        .status-pill.warning { border-color: rgba(155, 106, 40, 0.35); color: var(--warning); }
-        .status-pill.danger { border-color: rgba(154, 70, 58, 0.35); color: var(--danger); }
-
         .helper-text {
             color: var(--muted);
             font-size: 0.86rem;
@@ -458,9 +437,7 @@ if not posts.empty:
     posts["created_at_date"] = pd.to_datetime(posts["created_at"]).dt.date
 
     today_posts = posts[posts["created_at_date"] == date.today()]
-    qa_posts = today_posts[today_posts["status"] == "approved"]
 else:
-    qa_posts = pd.DataFrame()
     today_posts = pd.DataFrame()
 
 if not published_posts.empty:
@@ -488,25 +465,11 @@ if published_post_id and not published_posts.empty:
     st.stop()
 
 if not today_posts.empty:
-    if not today_published_posts.empty and "post_id" in today_published_posts.columns:
-        published_post_ids = set(today_published_posts["post_id"])
-    else:
-        published_post_ids = set()
-
-    approved_posts = today_posts[today_posts["status"] == "approved"]
-    approved_waiting_posts = approved_posts[~approved_posts["id"].isin(published_post_ids)]
     revision_posts = today_posts[today_posts["status"] == "needs_revision"]
-    draft_posts = today_posts[today_posts["status"] == "Draft"]
     human_review_posts = today_posts[today_posts["status"] == "human_review_required"]
-    qa_reviewed_posts = today_posts[
-        today_posts["status"].isin(["approved", "needs_revision", "human_review_required"])
-    ]
 else:
-    approved_waiting_posts = pd.DataFrame()
     revision_posts = pd.DataFrame()
-    draft_posts = pd.DataFrame()
     human_review_posts = pd.DataFrame()
-    qa_reviewed_posts = pd.DataFrame()
 
 due_clients, skipped_clients = scheduler_agent()
 
@@ -530,31 +493,8 @@ report_col1, report_col2, report_col3, report_col4, report_col5 = st.columns(5)
 report_col1.metric("Total Clients", len(clients))
 report_col2.metric("Clients Due Today", len(due_clients))
 report_col3.metric("Clients Skipped Today", len(skipped_clients))
-report_col4.metric("Posts Created Today", len(today_posts))
-report_col5.metric("Published Today", len(today_published_posts))
-
-report_col6, report_col7, report_col8 = st.columns(3)
-
-report_col6.metric("Approved Not Yet Published", len(approved_waiting_posts))
-report_col7.metric("Needs Revision", len(revision_posts))
-report_col8.metric("Drafts Waiting for QA", len(draft_posts))
-
-report_col9, report_col10 = st.columns(2)
-
-report_col9.metric("Needs Human Review", len(human_review_posts))
-report_col10.metric("Revision Attempts", int(today_posts["revision_count"].fillna(0).sum()) if not today_posts.empty and "revision_count" in today_posts.columns else 0)
-
-st.markdown(
-    f"""
-    <div class="status-strip">
-        <span class="status-pill success">{len(approved_waiting_posts)} approved and waiting</span>
-        <span class="status-pill warning">{len(revision_posts)} queued for automatic revision</span>
-        <span class="status-pill danger">{len(human_review_posts)} waiting on human review</span>
-        <span class="status-pill">{len(today_published_posts)} published records today</span>
-    </div>
-    """,
-    unsafe_allow_html=True
-)
+report_col4.metric("Posts Published Today", len(today_published_posts))
+report_col5.metric("Needs Human Review", len(human_review_posts))
 
 if not today_posts.empty and "qa_notes" in today_posts.columns:
     if not revision_posts.empty:
@@ -615,28 +555,6 @@ if not today_posts.empty:
     )
 else:
     st.info("No captions were generated today.")
-
-st.divider()
-
-section_header("Quality Control", "QA Agent Output")
-
-# Shows posts that have received a QA decision today.
-if not qa_reviewed_posts.empty:
-    qa_cols = ["client_id", "client_name", "caption", "status"]
-
-    if "qa_notes" in qa_reviewed_posts.columns:
-        qa_cols.append("qa_notes")
-
-    if "revision_count" in qa_reviewed_posts.columns:
-        qa_cols.append("revision_count")
-
-    st.dataframe(
-        qa_reviewed_posts[qa_cols],
-        hide_index=True,
-        use_container_width=True
-    )
-else:
-    st.info("No QA results yet.")
 
 st.divider()
 
