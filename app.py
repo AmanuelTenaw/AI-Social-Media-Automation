@@ -3,6 +3,7 @@ import html
 import streamlit as st
 import pandas as pd
 from datetime import date
+from agents.publish_report_agent import create_manager_summary
 from agents.scheduler_agent import scheduler_agent
 from database.supabase_client import supabase
 
@@ -488,6 +489,8 @@ st.markdown(
 
 section_header("Overview", "Daily Stakeholder Report")
 
+
+
 report_col1, report_col2, report_col3, report_col4, report_col5 = st.columns(5)
 
 report_col1.metric("Total Clients", len(clients))
@@ -495,6 +498,17 @@ report_col2.metric("Clients Due Today", len(due_clients))
 report_col3.metric("Clients Skipped Today", len(skipped_clients))
 report_col4.metric("Posts Published Today", len(today_published_posts))
 report_col5.metric("Needs Human Review", len(human_review_posts))
+
+
+st.write(
+    create_manager_summary({
+        "clients_due_today": len(due_clients),
+        "posts_published_today": len(today_published_posts),
+        "posts_needing_revision": len(revision_posts),
+        "posts_needing_human_review": len(human_review_posts)
+    })
+)
+
 
 if not today_posts.empty and "qa_notes" in today_posts.columns:
     if not revision_posts.empty:

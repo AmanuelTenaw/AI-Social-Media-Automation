@@ -210,10 +210,37 @@ def build_daily_report(published_posts, publishing_failures):
     return report
 
 
+def create_manager_summary(report):
+    """Returns a short, plain-English overview of the daily results."""
+    clients_due = report["clients_due_today"]
+    posts_published = report["posts_published_today"]
+    posts_needing_revision = report["posts_needing_revision"]
+    posts_needing_review = report["posts_needing_human_review"]
+
+    summary = (
+        f"Today, {clients_due} {'client was' if clients_due == 1 else 'clients were'} scheduled to post. "
+        f"{posts_published} {'post was' if posts_published == 1 else 'posts were'} published. "
+        f"{posts_needing_revision} {'post needs' if posts_needing_revision == 1 else 'posts need'} "
+        f"another automatic revision, and {posts_needing_review} "
+        f"{'post needs' if posts_needing_review == 1 else 'posts need'} a human review."
+    )
+
+    if "publishing_failures" in report:
+        if report["publishing_failures"]:
+            failures = report["publishing_failures"]
+            summary += f" {failures} {'post' if failures == 1 else 'posts'} failed to publish."
+        else:
+            summary += " There were no publishing failures."
+
+    return summary
+
+
 # Prints the daily report in a format a non-technical stakeholder can understand.
 def print_daily_report(report):
     print("\nDaily Publish and Report Summary")
     print("=" * 60)
+    print(create_manager_summary(report))
+    print("-" * 60)
     print(f"Report date: {report['report_date']}")
     print(f"Clients due today: {report['clients_due_today']}")
     print(f"Clients skipped today: {report['clients_skipped_today']}")

@@ -65,12 +65,11 @@ AI-Social-Media-Automation/
 ├── data/
 │   └── mock_social_media_clients.xlsx
 ├── database/
+│   ├── migrations/
+│   │   └── 001_initial_schema.sql
 │   └── supabase_client.py
 ├── services/
 │   └── load_clients.py
-├── supabase/
-│   └── migrations/
-│       └── 001_initial_schema.sql
 ├── .env.example
 ├── README.md
 ├── app.py
@@ -110,7 +109,7 @@ AI-Social-Media-Automation/
    ```
 
 4. Create a Supabase project, open its **SQL Editor**, copy the contents of
-   `supabase/migrations/001_initial_schema.sql`, and run the SQL. The migration
+   `database/migrations/001_initial_schema.sql`, and run the SQL. The migration
    creates the required tables, relationships, constraints, and indexes:
 
    - `clients`
