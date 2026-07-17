@@ -68,6 +68,11 @@ AI-Social-Media-Automation/
 │   └── supabase_client.py
 ├── services/
 │   └── load_clients.py
+├── supabase/
+│   └── migrations/
+│       └── 001_initial_schema.sql
+├── .env.example
+├── README.md
 ├── app.py
 ├── workflow.py
 ├── requirements.txt
@@ -89,7 +94,14 @@ AI-Social-Media-Automation/
    pip install -r requirements.txt
    ```
 
-3. Create a `.env` file in the project root:
+3. Copy the environment-variable example:
+
+   ```bash
+   cp .env.example .env
+   ```
+
+   Then replace the placeholders in `.env` with your OpenAI and Supabase
+   credentials:
 
    ```env
    OPENAI_API_KEY=your_openai_api_key
@@ -97,17 +109,29 @@ AI-Social-Media-Automation/
    SUPABASE_ANON_KEY=your_supabase_anon_key
    ```
 
-4. Ensure Supabase contains the following tables:
+4. Create a Supabase project, open its **SQL Editor**, copy the contents of
+   `supabase/migrations/001_initial_schema.sql`, and run the SQL. The migration
+   creates the required tables, relationships, constraints, and indexes:
 
    - `clients`
    - `posts`
    - `published_posts`
 
-5. Load the sample client spreadsheet if the `clients` table is empty:
+   The migration is designed for this mock-data demo, which accesses Supabase
+   with the anonymous key and no user sign-in. It therefore disables Row Level
+   Security on these three tables. Do not use this access model for real client
+   data. A production deployment should enable RLS and define authenticated,
+   least-privilege policies.
+
+5. Load the sample client spreadsheet into an empty `clients` table:
 
    ```bash
    python -m services.load_clients
    ```
+
+   The loader uses `data/mock_social_media_clients.xlsx`. Run it once for a new
+   database; `client_id` is a primary key, so loading the same rows again will
+   produce duplicate-key errors.
 
 ## Running the Project
 
